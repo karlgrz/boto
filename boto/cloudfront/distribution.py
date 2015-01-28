@@ -28,6 +28,7 @@ from boto.cloudfront.object import Object, StreamingObject
 from boto.cloudfront.signers import ActiveTrustedSigners, TrustedSigners
 from boto.cloudfront.logging import LoggingInfo
 from boto.cloudfront.origin import S3Origin, CustomOrigin
+from boto.cloudfront.cachebehavior import *
 from boto.s3.acl import ACL
 
 class DistributionConfig(object):
@@ -35,7 +36,7 @@ class DistributionConfig(object):
     def __init__(self, connection=None, origin=None, enabled=False,
                  caller_reference='', cnames=None, comment='',
                  trusted_signers=None, default_root_object=None,
-                 logging=None):
+                 logging=None, default_cache_behavior=None, cache_behaviors=None):
         """
         :param origin: Origin information to associate with the
                        distribution.  If your distribution will use
@@ -87,6 +88,15 @@ class DistributionConfig(object):
                         it should contain None.
         :type logging: :class`boto.cloudfront.logging.LoggingInfo`
 
+        :param default_cache_behavior: Controls whether a default cache behavior is set for the
+                        distribution. If you want to turn on default cache behavior,
+                        this should contain a LoggingInfo object; otherwise
+                        it should contain None.
+        :type default_cache_behavior: :class`boto.cloudfront.cachebehavior.DefaultCacheBehavior`
+
+        :param cache_behaviors: Specifies the configured cache cache_behaviors
+        :type cache_behaviors: list of class`boto.cloudfront.cachebehavior.CacheBehavior`
+
         """
         self.connection = connection
         self.origin = origin
@@ -102,6 +112,8 @@ class DistributionConfig(object):
         self.trusted_signers = trusted_signers
         self.logging = logging
         self.default_root_object = default_root_object
+        self.default_cache_behavior = default_cache_behavior
+        self.cache_behaviors = cache_behaviors
 
     def __repr__(self):
         return "DistributionConfig:%s" % self.origin
@@ -138,6 +150,10 @@ class DistributionConfig(object):
         if self.default_root_object:
             dro = self.default_root_object
             s += '<DefaultRootObject>%s</DefaultRootObject>\n' % dro
+        if self.default_cache_behavior:
+            s += self.default_cache_behavior.to_xml()
+        if self.cache_behaviors:
+            s += self.cache_behaviors.to_xml()
         s += '</DistributionConfig>\n'
         return s
 
@@ -154,6 +170,12 @@ class DistributionConfig(object):
         elif name == 'CustomOrigin':
             self.origin = CustomOrigin()
             return self.origin
+        elif name == 'DefaultCacheBehavior':
+            self.default_cache_behavior = DefaultCacheBehavior()
+            return self.default_cache_behavior
+        elif name == 'CacheBehaviors':
+            self.cache_behaviors = CacheBehaviors()
+            return self.cache_behaviors
         else:
             return None
 
@@ -171,6 +193,10 @@ class DistributionConfig(object):
             self.caller_reference = value
         elif name == 'DefaultRootObject':
             self.default_root_object = value
+        elif name == 'DefaultCacheBehavior':
+            self.default_cache_behavior = value
+        elif name == 'CacheBehaviors':
+            self.cache_behaviors = value
         else:
             setattr(self, name, value)
 
@@ -358,7 +384,9 @@ class Distribution(object):
                                         self.config.enabled, self.config.caller_reference,
                                         self.config.cnames, self.config.comment,
                                         self.config.trusted_signers,
-                                        self.config.default_root_object)
+                                        self.config.default_root_object,
+                                        self.config.default_cache_behavior,
+                                        self.config.cache_behaviors)
         if enabled is not None:
             new_config.enabled = enabled
         if cnames is not None:
