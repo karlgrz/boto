@@ -15,7 +15,7 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
 # ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
@@ -27,7 +27,7 @@ def get_oai_value(origin_access_identity):
         return origin_access_identity.uri()
     else:
         return origin_access_identity
-                
+
 class S3Origin(object):
     """
     Origin information to associate with the distribution.
@@ -35,13 +35,18 @@ class S3Origin(object):
     then you use the S3Origin element.
     """
 
-    def __init__(self, dns_name=None, origin_access_identity=None):
+    def __init__(self, id=None, domain_name=None, dns_name=None, origin_access_identity=None):
         """
+        :param id: A unique identifier for the origin.
+                   The value of Id must be unique within
+                   the distribution.
+        :type id: str
+
         :param dns_name: The DNS name of your Amazon S3 bucket to
                          associate with the distribution.
                          For example: mybucket.s3.amazonaws.com.
         :type dns_name: str
-        
+
         :param origin_access_identity: The CloudFront origin access
                                        identity to associate with the
                                        distribution. If you want the
@@ -50,8 +55,9 @@ class S3Origin(object):
                                        distribution to serve public content,
                                        remove this element.
         :type origin_access_identity: str
-        
+
         """
+        self.id = id
         self.dns_name = dns_name
         self.origin_access_identity = origin_access_identity
 
@@ -62,7 +68,9 @@ class S3Origin(object):
         return None
 
     def endElement(self, name, value, connection):
-        if name == 'DNSName':
+        if name == 'Id':
+            self.id = value
+        if name == 'DomainName':
             self.dns_name = value
         elif name == 'OriginAccessIdentity':
             self.origin_access_identity = value
@@ -71,13 +79,13 @@ class S3Origin(object):
 
     def to_xml(self):
         s = '  <S3Origin>\n'
-        s += '    <DNSName>%s</DNSName>\n' % self.dns_name
+        s += '    <DomainName>%s</DomainName>\n' % self.dns_name
         if self.origin_access_identity:
             val = get_oai_value(self.origin_access_identity)
             s += '    <OriginAccessIdentity>%s</OriginAccessIdentity>\n' % val
         s += '  </S3Origin>\n'
         return s
-    
+
 class CustomOrigin(object):
     """
     Origin information to associate with the distribution.
@@ -92,13 +100,13 @@ class CustomOrigin(object):
                          associate with the distribution.
                          For example: mybucket.s3.amazonaws.com.
         :type dns_name: str
-        
+
         :param http_port: The HTTP port the custom origin listens on.
         :type http_port: int
-        
+
         :param https_port: The HTTPS port the custom origin listens on.
         :type http_port: int
-        
+
         :param origin_protocol_policy: The origin protocol policy to
                                        apply to your origin. If you
                                        specify http-only, CloudFront
@@ -108,7 +116,7 @@ class CustomOrigin(object):
                                        or HTTPS, based on the protocol of the
                                        viewer request.
         :type origin_protocol_policy: str
-        
+
         """
         self.dns_name = dns_name
         self.http_port = http_port
@@ -122,7 +130,7 @@ class CustomOrigin(object):
         return None
 
     def endElement(self, name, value, connection):
-        if name == 'DNSName':
+        if name == 'DomainName':
             self.dns_name = value
         elif name == 'HTTPPort':
             try:
@@ -141,10 +149,10 @@ class CustomOrigin(object):
 
     def to_xml(self):
         s = '  <CustomOrigin>\n'
-        s += '    <DNSName>%s</DNSName>\n' % self.dns_name
+        s += '    <DomainName>%s</DomainName>\n' % self.dns_name
         s += '    <HTTPPort>%d</HTTPPort>\n' % self.http_port
         s += '    <HTTPSPort>%d</HTTPSPort>\n' % self.https_port
         s += '    <OriginProtocolPolicy>%s</OriginProtocolPolicy>\n' % self.origin_protocol_policy
         s += '  </CustomOrigin>\n'
         return s
-    
+

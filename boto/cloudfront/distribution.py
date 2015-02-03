@@ -120,12 +120,23 @@ class DistributionConfig(object):
 
     def to_xml(self):
         s = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        s += '<DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2010-07-15/">\n'
+        s += '<DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">\n'
         if self.origin:
+            s += '    <Origins>\n'
+            s += '      <Quantity>1</Quantity>\n'
+            s += '      <Items>\n'
             s += self.origin.to_xml()
+            s += '      </Items>\n'
+            s += '    </Origins>\n'
         s += '  <CallerReference>%s</CallerReference>\n' % self.caller_reference
-        for cname in self.cnames:
-            s += '  <CNAME>%s</CNAME>\n' % cname
+        s += '  <Aliases>\n'
+        s += '    <Quantity>%s</Quantity>\n' % len(self.cnames)
+        if len(self.cnames) > 0:
+            s += '    <Items>\n'
+            for cname in self.cnames:
+                s += '      <CNAME>%s</CNAME>\n' % cname
+            s += '    </Items>\n'
+        s += '  </Aliases>\n'
         if self.comment:
             s += '  <Comment>%s</Comment>\n' % self.comment
         s += '  <Enabled>'
@@ -142,11 +153,18 @@ class DistributionConfig(object):
                 else:
                     s += '  <AwsAccountNumber>%s</AwsAccountNumber>\n' % signer
             s += '</TrustedSigners>\n'
+        s += '<Logging>\n'
         if self.logging:
-            s += '<Logging>\n'
+            s += '  <Enabled>true</Enabled>\n'
+            s += '  <IncludeCookies>true</IncludeCookies>\n'
             s += '  <Bucket>%s</Bucket>\n' % self.logging.bucket
             s += '  <Prefix>%s</Prefix>\n' % self.logging.prefix
-            s += '</Logging>\n'
+        else:
+            s += '  <Enabled>false</Enabled>\n'
+            s += '  <IncludeCookies>false</IncludeCookies>\n'
+            s += '  <Bucket></Bucket>\n'
+            s += '  <Prefix></Prefix>\n'
+        s += '</Logging>\n'
         if self.default_root_object:
             dro = self.default_root_object
             s += '<DefaultRootObject>%s</DefaultRootObject>\n' % dro
@@ -154,6 +172,9 @@ class DistributionConfig(object):
             s += self.default_cache_behavior.to_xml()
         if self.cache_behaviors:
             s += self.cache_behaviors.to_xml()
+        s += '  <ViewerCertificate><CloudFrontDefaultCertificate>true</CloudFrontDefaultCertificate></ViewerCertificate>\n'
+        s += '  <PriceClass>PriceClass_All</PriceClass>\n'
+        s += '  <CustomErrorResponse><Quantity>0</Quantity></CustomErrorResponse>\n'
         s += '</DistributionConfig>\n'
         return s
 
@@ -213,7 +234,7 @@ class StreamingDistributionConfig(DistributionConfig):
                                     logging=logging)
     def to_xml(self):
         s = '<?xml version="1.0" encoding="UTF-8"?>\n'
-        s += '<StreamingDistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2010-07-15/">\n'
+        s += '<StreamingDistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">\n'
         if self.origin:
             s += self.origin.to_xml()
         s += '  <CallerReference>%s</CallerReference>\n' % self.caller_reference

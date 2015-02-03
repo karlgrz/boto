@@ -14,7 +14,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_get_all_distributions(self):
         body = b"""
-        <DistributionList xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <DistributionList xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Marker></Marker>
             <MaxItems>100</MaxItems>
             <IsTruncated>false</IsTruncated>
@@ -53,7 +53,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_get_distribution_config(self):
         body = b"""
-        <DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
         <CustomOrigin>
             <DNSName>example.com</DNSName>
             <HTTPPort>80</HTTPPort>
@@ -81,7 +81,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_set_distribution_config(self):
         get_body = b"""
-        <DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
         <CustomOrigin>
             <DNSName>example.com</DNSName>
             <HTTPPort>80</HTTPPort>
@@ -95,7 +95,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
         """
 
         put_body = b"""
-        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Id>EEEEEE</Id>
             <Status>InProgress</Status>
             <LastModifiedTime>2014-02-04T10:47:53.493Z</LastModifiedTime>
@@ -126,7 +126,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_get_distribution_info(self):
         body = b"""
-        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Id>EEEEEEEEEEEEE</Id>
             <Status>InProgress</Status>
             <LastModifiedTime>2014-02-03T11:03:41.087Z</LastModifiedTime>
@@ -165,7 +165,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_create_distribution(self):
         body = b"""
-        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Id>EEEEEEEEEEEEEE</Id>
             <Status>InProgress</Status>
             <LastModifiedTime>2014-02-04T10:34:07.873Z</LastModifiedTime>
@@ -205,7 +205,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
 
     def test_create_distribution_with_default_cache_behavior(self):
         body = b"""
-        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2010-11-01/">
+        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Id>EEEEEEEEEEEEEE</Id>
             <Status>InProgress</Status>
             <LastModifiedTime>2014-02-04T10:34:07.873Z</LastModifiedTime>
