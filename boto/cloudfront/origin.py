@@ -70,7 +70,7 @@ class S3Origin(object):
     def endElement(self, name, value, connection):
         if name == 'Id':
             self.id = value
-        if name == 'DomainName':
+        if name == 'DomainName' or name == 'DNSName':
             self.dns_name = value
         elif name == 'OriginAccessIdentity':
             self.origin_access_identity = value
@@ -130,7 +130,7 @@ class CustomOrigin(object):
         return None
 
     def endElement(self, name, value, connection):
-        if name == 'DomainName':
+        if name == 'DomainName' or name == 'DNSName':
             self.dns_name = value
         elif name == 'HTTPPort':
             try:

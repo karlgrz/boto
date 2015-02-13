@@ -160,9 +160,6 @@ class ForwardedValues(object):
         :param cookies: list of Cookies to forward
         :type cookies: list of :class`boto.cloudfront.cachebehavior.Cookies`
 
-        :param headers: list of headers to forward
-        :type headers: list :class`boto.cloudfront.cachebehavior.Headers`
-
         """
         self.querystring = querystring
         self.cookies = cookies
@@ -175,9 +172,6 @@ class ForwardedValues(object):
         if name == 'Cookies':
             self.cookies = Cookies()
             return self.cookies
-        elif name == 'Headers':
-            self.headers = Headers()
-            return self.headers
         return None
 
     def endElement(self, name, value, connection):
@@ -196,8 +190,6 @@ class ForwardedValues(object):
         s += '</QueryString>\n'
         if self.cookies:
             s += self.cookies.to_xml()
-        if self.headers:
-            s += self.headers.to_xml()
         s += '    </ForwardedValues>\n'
         return s
 
@@ -269,38 +261,6 @@ class Names(list):
     def endElement(self, name, value, connection):
         if name == 'Name':
             self.append(value)
-
-class Headers(object):
-    def __init__(self,items=None):
-        """
-        :param items: list of header names to forward
-        :type items: list of str
-
-        """
-        self.items = items
-
-    def startElement(self, name, attrs, connection):
-        if name == 'Items':
-            self.items = Names()
-            return self.items
-        return None
-
-    def endElement(self, name, value, connection):
-        if name == 'Items':
-            self.items = value
-        else:
-            setattr(self, name, value)
-
-    def to_xml(self):
-        s = '      <Headers>\n'
-        if self.items:
-            s += '        <Quantity>%s</Quantity>\n' % len(self.items)
-            s += '        <Items>\n'
-            for name in self.items:
-                s += '          <Name>%s</Name>\n' % name
-            s += '        </Items>\n'
-        s += '      </Headers>\n'
-        return s
 
 class AllowedMethods(object):
     def __init__(self, items=None,cached_methods=None):

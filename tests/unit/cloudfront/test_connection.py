@@ -213,7 +213,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
             <DomainName>d2000000000000.cloudfront.net</DomainName>
             <DistributionConfig>
                 <CustomOrigin>
-                    <DNSName>example.com</DNSName>
+                    <DomainName>example.com</DomainName>
                     <HTTPPort>80</HTTPPort>
                     <HTTPSPort>443</HTTPSPort>
                     <OriginProtocolPolicy>match-viewer</OriginProtocolPolicy>
@@ -234,12 +234,6 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
                             </Items>
                          </WhitelistedNames>
                       </Cookies>
-                      <Headers>
-                         <Quantity>1</Quantity>
-                         <Items>
-                            <Name>Origin</Name>
-                         </Items>
-                      </Headers>
                    </ForwardedValues>
                    <TrustedSigners>
                       <Enabled>true</Enabled>
@@ -250,20 +244,6 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
                    </TrustedSigners>
                    <ViewerProtocolPolicy>redirect-to-https</ViewerProtocolPolicy>
                    <MinTTL>0</MinTTL>
-                   <AllowedMethods>
-                      <Quantity>2</Quantity>
-                      <Items>
-                         <Method>GET</Method>
-                         <Method>HEAD</Method>
-                      </Items>
-                      <CachedMethods>
-                         <Quantity>2</Quantity>
-                         <Items>
-                            <Method>GET</Method>
-                            <Method>HEAD</Method>
-                         </Items>
-                      </CachedMethods>
-                   </AllowedMethods>
                    <SmoothStreaming>false</SmoothStreaming>
                 </DefaultCacheBehavior>
                 <CacheBehaviors>
@@ -277,12 +257,6 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
                            <Cookies>
                               <Forward>all</Forward>
                            </Cookies>
-                           <Headers>
-                              <Quantity>1</Quantity>
-                              <Items>
-                                 <Name>Origin</Name>
-                              </Items>
-                           </Headers>
                         </ForwardedValues>
                         <TrustedSigners>
                            <Enabled>true</Enabled>
@@ -294,20 +268,6 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
                         </TrustedSigners>
                         <ViewerProtocolPolicy>allow-all</ViewerProtocolPolicy>
                         <MinTTL>86400</MinTTL>
-                        <AllowedMethods>
-                           <Quantity>2</Quantity>
-                           <Items>
-                              <Method>GET</Method>
-                              <Method>HEAD</Method>
-                           </Items>
-                           <CachedMethods>
-                              <Quantity>2</Quantity>
-                              <Items>
-                                 <Method>GET</Method>
-                                 <Method>HEAD</Method>
-                              </Items>
-                           </CachedMethods>
-                        </AllowedMethods>
                         <SmoothStreaming>false</SmoothStreaming>
                      </CacheBehavior>
                      <CacheBehavior>
@@ -324,20 +284,16 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
         self.set_http_response(status_code=201, body=body)
         origin = CustomOrigin("example.com", origin_protocol_policy="match_viewer")
         default_cookies=Cookies(forward="whitelist",whitelisted_names=["example-cookie"])
-        default_headers=Headers(items=["Origin"])
-        default_forwarded_values = ForwardedValues(querystring=True,cookies=default_cookies,headers=default_headers)
+        default_forwarded_values = ForwardedValues(querystring=True,cookies=default_cookies)
         default_trusted_signers = TrustedSigners(["self"])
         default_viewer_protocol_policy = "redirect-to-https"
-        default_allowed_methods = AllowedMethods(items=["GET","HEAD"],cached_methods=["GET","HEAD"])
-        default_cache_behavior = DefaultCacheBehavior(target_origin_id="example", forwarded_values=default_forwarded_values,trusted_signers=default_trusted_signers,viewer_protocol_policy=default_viewer_protocol_policy,min_ttl=60,allowed_methods=default_allowed_methods, smooth_streaming=False)
+        default_cache_behavior = DefaultCacheBehavior(target_origin_id="example", forwarded_values=default_forwarded_values,trusted_signers=default_trusted_signers,viewer_protocol_policy=default_viewer_protocol_policy,min_ttl=60, smooth_streaming=False)
 
         cookies=Cookies(forward="all")
-        headers=Headers(items=["Origin"])
-        forwarded_values = ForwardedValues(querystring=False,cookies=cookies,headers=headers)
+        forwarded_values = ForwardedValues(querystring=False,cookies=cookies)
         trusted_signers = TrustedSigners(["self", "111122223333"])
         viewer_protocol_policy = "allow-all"
-        allowed_methods = AllowedMethods(["GET","HEAD"])
-        cache_behavior = CacheBehavior(target_origin_id="example-custom-origin",path_pattern="*.jpg",trusted_signers=trusted_signers,viewer_protocol_policy=viewer_protocol_policy,min_ttl=86400,allowed_methods=allowed_methods, smooth_streaming=False)
+        cache_behavior = CacheBehavior(target_origin_id="example-custom-origin",path_pattern="*.jpg",trusted_signers=trusted_signers,viewer_protocol_policy=viewer_protocol_policy,min_ttl=86400, smooth_streaming=False)
         cache_behavior2 = CacheBehavior(target_origin_id="example-custom-origin-2",path_pattern="*.png",smooth_streaming=False)
         cache_behaviors = CacheBehaviors(items=[cache_behavior,cache_behavior2])
 
@@ -370,22 +326,14 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
         self.assertEqual(response.config.default_cache_behavior.forwarded_values.cookies.forward, "whitelist")
         self.assertTrue(isinstance(response.config.default_cache_behavior.forwarded_values.cookies.whitelisted_names, WhitelistedNames))
         self.assertEqual(response.config.default_cache_behavior.forwarded_values.cookies.whitelisted_names.items, ["example-cookie"])
-        self.assertTrue(isinstance(response.config.default_cache_behavior.forwarded_values.headers, Headers))
-        self.assertEqual(response.config.default_cache_behavior.forwarded_values.headers.items, ["Origin"])
 
         self.assertEqual(response.config.default_cache_behavior.trusted_signers, ["self"])
         self.assertEqual(response.config.default_cache_behavior.viewer_protocol_policy, "redirect-to-https")
         self.assertEqual(response.config.default_cache_behavior.min_ttl, 0)
-
-        self.assertTrue(isinstance(response.config.default_cache_behavior.allowed_methods, AllowedMethods))
-        self.assertEqual(response.config.default_cache_behavior.allowed_methods.items, ["GET","HEAD"])
-        self.assertEqual(response.config.default_cache_behavior.allowed_methods.cached_methods, ["GET","HEAD"])
 
         self.assertFalse(response.config.default_cache_behavior.smooth_streaming)
 
         self.assertTrue(isinstance(response.config.cache_behaviors, CacheBehaviors))
 
         self.assertTrue(isinstance(response.config.cache_behaviors.items, CacheBehaviorList))
-
-        self.assertEqual(response.config.cache_behaviors.items.allowed_methods.items, ["GET", "HEAD"])
 
