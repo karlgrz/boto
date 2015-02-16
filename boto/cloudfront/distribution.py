@@ -172,6 +172,10 @@ class DistributionConfig(object):
             s += self.default_cache_behavior.to_xml()
         if self.cache_behaviors:
             s += self.cache_behaviors.to_xml()
+        else:
+            s += '  <CacheBehaviors>\n'
+            s += '    <Quantity>0</Quantity>\n'
+            s += '  </CacheBehaviors>\n'
         s += '  <ViewerCertificate><CloudFrontDefaultCertificate>true</CloudFrontDefaultCertificate></ViewerCertificate>\n'
         s += '  <PriceClass>PriceClass_All</PriceClass>\n'
         s += '  <CustomErrorResponse><Quantity>0</Quantity></CustomErrorResponse>\n'

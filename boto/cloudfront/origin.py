@@ -79,6 +79,7 @@ class S3Origin(object):
 
     def to_xml(self):
         s = '  <S3Origin>\n'
+        s += '    <Id>%s</Id>\n' % self.id
         s += '    <DomainName>%s</DomainName>\n' % self.dns_name
         if self.origin_access_identity:
             val = get_oai_value(self.origin_access_identity)

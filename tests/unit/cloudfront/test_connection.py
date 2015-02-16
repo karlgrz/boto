@@ -203,7 +203,7 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
         self.assertEqual(response.domain_name, "d2000000000000.cloudfront.net")
         self.assertEqual(response.in_progress_invalidation_batches, 0)
 
-    def test_create_distribution_with_default_cache_behavior(self):
+    def test_create_distribution_with_default_cache_behavior_and_cachebehaviors(self):
         body = b"""
         <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
             <Id>EEEEEEEEEEEEEE</Id>
@@ -336,4 +336,110 @@ class TestCloudFrontConnection(AWSMockServiceTestCase):
         self.assertTrue(isinstance(response.config.cache_behaviors, CacheBehaviors))
 
         self.assertTrue(isinstance(response.config.cache_behaviors.items, CacheBehaviorList))
+
+    def test_create_distribution_with_default_cache_behavior_and_no_cachebehaviors(self):
+        body = b"""
+        <Distribution xmlns="http://cloudfront.amazonaws.com/doc/2012-07-01/">
+            <Id>EEEEEEEEEEEEEE</Id>
+            <Status>InProgress</Status>
+            <LastModifiedTime>2014-02-04T10:34:07.873Z</LastModifiedTime>
+            <InProgressInvalidationBatches>0</InProgressInvalidationBatches>
+            <DomainName>d2000000000000.cloudfront.net</DomainName>
+            <DistributionConfig>
+                <CustomOrigin>
+                    <DomainName>example.com</DomainName>
+                    <HTTPPort>80</HTTPPort>
+                    <HTTPSPort>443</HTTPSPort>
+                    <OriginProtocolPolicy>match-viewer</OriginProtocolPolicy>
+                </CustomOrigin>
+                <CallerReference>aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee</CallerReference>
+                <Comment>example.com distribution</Comment>
+                <Enabled>false</Enabled>
+                <DefaultCacheBehavior>
+                   <TargetOriginId>example</TargetOriginId>
+                   <ForwardedValues>
+                      <QueryString>true</QueryString>
+                      <Cookies>
+                         <Forward>whitelist</Forward>
+                         <WhitelistedNames>
+                            <Quantity>1</Quantity>
+                            <Items>
+                               <Name>example-cookie</Name>
+                            </Items>
+                         </WhitelistedNames>
+                      </Cookies>
+                   </ForwardedValues>
+                   <TrustedSigners>
+                      <Enabled>true</Enabled>
+                      <Quantity>1</Quantity>
+                      <Items>
+                         <AwsAccountNumber>self</AwsAccountNumber>
+                      </Items>
+                   </TrustedSigners>
+                   <ViewerProtocolPolicy>redirect-to-https</ViewerProtocolPolicy>
+                   <MinTTL>0</MinTTL>
+                   <SmoothStreaming>false</SmoothStreaming>
+                </DefaultCacheBehavior>
+                <CacheBehaviors>
+                  <Quantity>0</Quantity>
+                </CacheBehaviors>
+            </DistributionConfig>
+        </Distribution>
+        """
+
+        self.set_http_response(status_code=201, body=body)
+        origin = CustomOrigin("example.com", origin_protocol_policy="match_viewer")
+        default_cookies=Cookies(forward="whitelist",whitelisted_names=["example-cookie"])
+        default_forwarded_values = ForwardedValues(querystring=True,cookies=default_cookies)
+        default_trusted_signers = TrustedSigners(["self"])
+        default_viewer_protocol_policy = "redirect-to-https"
+        default_cache_behavior = DefaultCacheBehavior(target_origin_id="example", forwarded_values=default_forwarded_values,trusted_signers=default_trusted_signers,viewer_protocol_policy=default_viewer_protocol_policy,min_ttl=60, smooth_streaming=False)
+
+        cookies=Cookies(forward="all")
+        forwarded_values = ForwardedValues(querystring=False,cookies=cookies)
+        trusted_signers = TrustedSigners(["self", "111122223333"])
+        viewer_protocol_policy = "allow-all"
+        cache_behavior = CacheBehavior(target_origin_id="example-custom-origin",path_pattern="*.jpg",trusted_signers=trusted_signers,viewer_protocol_policy=viewer_protocol_policy,min_ttl=86400, smooth_streaming=False)
+        cache_behavior2 = CacheBehavior(target_origin_id="example-custom-origin-2",path_pattern="*.png",smooth_streaming=False)
+        cache_behaviors = CacheBehaviors(items=[cache_behavior,cache_behavior2])
+
+        response = self.service_connection.create_distribution(origin, enabled=False, comment="example.com distribution",default_cache_behavior=default_cache_behavior,cache_behaviors=cache_behaviors)
+
+        self.assertTrue(isinstance(response, Distribution))
+        self.assertTrue(isinstance(response.config, DistributionConfig))
+        self.assertTrue(isinstance(response.config.origin, CustomOrigin))
+
+        self.assertEqual(response.config.origin.dns_name, "example.com")
+        self.assertEqual(response.config.origin.http_port, 80)
+        self.assertEqual(response.config.origin.https_port, 443)
+        self.assertEqual(response.config.origin.origin_protocol_policy, "match-viewer")
+
+        self.assertEqual(response.config.cnames, [])
+
+        self.assertTrue(not response.config.enabled)
+
+        self.assertEqual(response.id, "EEEEEEEEEEEEEE")
+        self.assertEqual(response.status, "InProgress")
+        self.assertEqual(response.domain_name, "d2000000000000.cloudfront.net")
+        self.assertEqual(response.in_progress_invalidation_batches, 0)
+
+        self.assertTrue(isinstance(response.config.default_cache_behavior, DefaultCacheBehavior))
+        self.assertEqual(response.config.default_cache_behavior.target_origin_id, "example")
+
+        self.assertTrue(isinstance(response.config.default_cache_behavior.forwarded_values, ForwardedValues))
+        self.assertTrue(response.config.default_cache_behavior.forwarded_values.querystring)
+        self.assertTrue(isinstance(response.config.default_cache_behavior.forwarded_values.cookies, Cookies))
+        self.assertEqual(response.config.default_cache_behavior.forwarded_values.cookies.forward, "whitelist")
+        self.assertTrue(isinstance(response.config.default_cache_behavior.forwarded_values.cookies.whitelisted_names, WhitelistedNames))
+        self.assertEqual(response.config.default_cache_behavior.forwarded_values.cookies.whitelisted_names.items, ["example-cookie"])
+
+        self.assertEqual(response.config.default_cache_behavior.trusted_signers, ["self"])
+        self.assertEqual(response.config.default_cache_behavior.viewer_protocol_policy, "redirect-to-https")
+        self.assertEqual(response.config.default_cache_behavior.min_ttl, 0)
+
+        self.assertFalse(response.config.default_cache_behavior.smooth_streaming)
+
+        self.assertTrue(isinstance(response.config.cache_behaviors, CacheBehaviors))
+
+        self.assertTrue(not response.config.cache_behaviors.items)
 
